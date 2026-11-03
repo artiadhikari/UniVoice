@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import AdminDashboard from "./AdminDashboard";
+import PortalSelect from "./components/PortalSelect";
 
 import {
   Mic,
@@ -25,11 +26,21 @@ import ComplaintForm from "./ComplaintForm";
 const API_URL = "http://localhost:5000/api/complaints";
 
 function App() {
+  // Portal selection
+  const [selectedPortal, setSelectedPortal] = useState(() => {
+    return (
+      sessionStorage.getItem("univoice_portal") ||
+      (window.location.pathname === "/admin" ? "admin" : null)
+    );
+  });
+
+  // Student dashboard state
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Notification state
   const [notifications, setNotifications] = useState([]);
   const [notificationError, setNotificationError] = useState("");
   const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -37,6 +48,47 @@ function App() {
 
   // Demo student profile
   const studentId = "STU001";
+
+  // Select portal
+  const selectPortal = (portal) => {
+    sessionStorage.setItem("univoice_portal", portal);
+    setSelectedPortal(portal);
+
+    if (portal === "admin") {
+      window.history.pushState({}, "", "/admin");
+    } else {
+      window.history.replaceState({}, "", "/");
+    }
+  };
+
+  // Return to portal selection
+  const backToPortal = () => {
+    sessionStorage.removeItem("univoice_portal");
+    setSelectedPortal(null);
+    setActiveTab("Dashboard");
+    window.history.replaceState({}, "", "/");
+  };
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const portal = sessionStorage.getItem("univoice_portal");
+
+      if (window.location.pathname === "/admin" && portal === "admin") {
+        setSelectedPortal("admin");
+      } else if (portal) {
+        setSelectedPortal(portal);
+      } else {
+        setSelectedPortal(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   // Fetch complaints from backend
   const fetchComplaints = useCallback(async () => {
@@ -87,16 +139,20 @@ function App() {
     }
   }, []);
 
-  // Load complaints when Dashboard or My Complaints opens
+  // Load complaints when student dashboard pages open
   useEffect(() => {
-    if (activeTab === "Dashboard" || activeTab === "My Complaints") {
+    if (
+      selectedPortal === "student" &&
+      (activeTab === "Dashboard" || activeTab === "My Complaints")
+    ) {
       fetchComplaints();
     }
-  }, [activeTab, fetchComplaints]);
+  }, [activeTab, selectedPortal, fetchComplaints]);
 
-  // Fetch notifications on startup and every 10 seconds
-  // This keeps the bell badge updated across all pages
+  // Fetch notifications only inside student portal
   useEffect(() => {
+    if (selectedPortal !== "student") return;
+
     fetchNotifications();
 
     const interval = setInterval(() => {
@@ -104,7 +160,7 @@ function App() {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, [selectedPortal, fetchNotifications]);
 
   // Calculate unread notifications
   const unreadCount = notifications.filter(
@@ -121,7 +177,6 @@ function App() {
       );
 
       if (response.data.success) {
-        // Update locally immediately so badge count decreases
         setNotifications((previous) =>
           previous.map((notification) =>
             notification.id === notificationId
@@ -224,11 +279,39 @@ function App() {
     </div>
   );
 
-  // Show Admin Dashboard on /admin
-  if (window.location.pathname === "/admin") {
-    return <AdminDashboard />;
+  // Show portal selection
+  if (!selectedPortal) {
+    return <PortalSelect onSelect={selectPortal} />;
   }
 
+  // Show admin dashboard
+  if (selectedPortal === "admin") {
+    return (
+      <>
+        <button
+          onClick={backToPortal}
+          style={{
+            position: "fixed",
+            top: "15px",
+            left: "15px",
+            zIndex: 9999,
+            padding: "10px 16px",
+            borderRadius: "10px",
+            border: "1px solid #ddd",
+            background: "white",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          ← Back to Portal
+        </button>
+
+        <AdminDashboard />
+      </>
+    );
+  }
+
+  // Student portal
   return (
     <div className="app">
       <aside className="sidebar">
@@ -267,6 +350,14 @@ function App() {
           </button>
         ))}
 
+        <button
+          className="nav-item"
+          onClick={backToPortal}
+        >
+          <ArrowUpRight size={19} />
+          Switch Portal
+        </button>
+
         <div className="sidebar-bottom">
           <div className="profile-avatar">DS</div>
 
@@ -293,7 +384,6 @@ function App() {
               <Search />
             </button>
 
-            {/* Notification Bell with unread count */}
             <button
               className="icon-button notification-bell"
               aria-label={`${unreadCount} unread notifications`}
@@ -321,12 +411,8 @@ function App() {
               fetchComplaints();
             }}
           />
-
         ) : activeTab === "Notifications" ? (
-
-          /* Separate Notifications Page */
           <section className="notifications-page">
-
             <div className="notifications-page-header">
               <div>
                 <span className="eyebrow">STUDENT UPDATES</span>
@@ -346,9 +432,7 @@ function App() {
               </button>
             </div>
 
-            {/* Notification Summary */}
             <div className="notification-summary">
-
               <div className="notification-summary-card">
                 <span>Total Notifications</span>
                 <h2>{notifications.length}</h2>
@@ -363,7 +447,6 @@ function App() {
                 <span>Read</span>
                 <h2>{notifications.length - unreadCount}</h2>
               </div>
-
             </div>
 
             {notificationError && (
@@ -372,16 +455,12 @@ function App() {
               </div>
             )}
 
-            {/* Loading State */}
             {notificationsLoading && notifications.length === 0 ? (
               <div className="notifications-empty">
                 <RefreshCw size={32} />
                 <h3>Loading notifications...</h3>
               </div>
-
             ) : notifications.length === 0 ? (
-
-              /* Empty State */
               <div className="notifications-empty">
                 <Bell size={38} />
                 <h3>You're all caught up!</h3>
@@ -390,12 +469,8 @@ function App() {
                   status changes.
                 </p>
               </div>
-
             ) : (
-
-              /* Notification List */
               <div className="notifications-page-list">
-
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
@@ -403,7 +478,6 @@ function App() {
                       notification.is_read ? "read" : "unread"
                     }`}
                   >
-
                     <div className="notification-card-icon">
                       {notification.is_read ? (
                         <CheckCircle2 size={21} />
@@ -413,7 +487,6 @@ function App() {
                     </div>
 
                     <div className="notification-card-content">
-
                       <div className="notification-card-heading">
                         <h3>Complaint Update</h3>
 
@@ -437,11 +510,9 @@ function App() {
                           {formatDate(notification.created_at)}
                         </span>
                       </div>
-
                     </div>
 
                     {!notification.is_read ? (
-
                       <button
                         className="mark-read-button"
                         disabled={markingReadId === notification.id}
@@ -455,27 +526,18 @@ function App() {
                           ? "Updating..."
                           : "Mark as read"}
                       </button>
-
                     ) : (
-
                       <span className="read-indicator">
                         <CheckCircle2 size={16} />
                         Read
                       </span>
-
                     )}
-
                   </div>
                 ))}
-
               </div>
             )}
-
           </section>
-
         ) : activeTab === "My Complaints" ? (
-
-          /* My Complaints Page */
           <section className="recent-section">
             <div className="section-heading">
               <div>
@@ -519,10 +581,7 @@ function App() {
               </div>
             )}
           </section>
-
         ) : activeTab === "Dashboard" ? (
-
-          /* Dashboard Page */
           <>
             <section className="welcome">
               <div>
@@ -617,15 +676,11 @@ function App() {
               )}
             </section>
           </>
-
         ) : (
-
-          /* Settings Page */
           <section className="recent-section">
             <h2>Settings</h2>
             <p>Settings will be available soon.</p>
           </section>
-
         )}
       </main>
     </div>
