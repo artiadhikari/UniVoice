@@ -185,3 +185,68 @@
     font-size: 29px;
   }
 }
+.success-card {
+  max-width: 520px;
+  margin: 60px auto;
+  padding: 40px 30px;
+  background: #ffffff;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.success-icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 48px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-card h2 {
+  color: #15803d;
+  margin-bottom: 10px;
+}
+
+.success-card p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.ticket-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 20px;
+  margin: 24px 0;
+}
+
+.ticket-box span:first-child {
+  color: #64748b;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ticket-box h3 {
+  color: #166534;
+  font-size: 22px;
+  margin: 12px 0;
+  word-break: break-word;
+}
+
+.pending-status {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}

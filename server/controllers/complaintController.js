@@ -1,6 +1,6 @@
 const db = require("../database/db");
 const { randomUUID } = require("crypto");
-
+const { analyzeComplaint } = require("../services/geminiService");
 // Submit a new complaint
 const createComplaint = (req, res) => {
   try {
@@ -73,5 +73,40 @@ const createComplaint = (req, res) => {
     });
   }
 };
+// Analyze spoken complaint using Gemini AI
+const analyzeComplaintController = async (req, res) => {
+  try {
+    const { transcript, language, previousData } = req.body;
 
-module.exports = { createComplaint };
+    if (!transcript || !transcript.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint transcript is required.",
+      });
+    }
+
+const analysis = await analyzeComplaint(
+  transcript,
+  language || "English",
+  previousData || null
+);
+
+    return res.status(200).json({
+      success: true,
+      message: "Complaint analyzed successfully!",
+      data: analysis,
+    });
+
+  } catch (error) {
+    console.error("Gemini analysis error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "AI could not analyze the complaint. Please try again.",
+    });
+  }
+};
+module.exports = {
+  createComplaint,
+  analyzeComplaintController,
+};
