@@ -1,0 +1,214 @@
+
+.admin-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  color: #202438;
+  font-family: inherit;
+}
+
+.admin-header {
+  background: white;
+  padding: 18px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e9eaf0;
+}
+
+.admin-brand, .admin-header-right, .admin-title-row,
+.admin-title-row h1, .admin-table-heading {
+  display: flex;
+  align-items: center;
+}
+
+.admin-brand { gap: 12px; }
+.admin-logo {
+  background: #5145cd;
+  color: white;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+.admin-brand h2, .admin-brand p,
+.admin-stat-card p, .admin-table-heading p {
+  margin: 0;
+}
+.admin-brand p, .admin-table-heading p {
+  color: #85899a;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.admin-header-right { gap: 18px; }
+.admin-role {
+  color: #5145cd;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-back, .admin-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e5e5ed;
+  background: white;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.admin-main {
+  max-width: 1450px;
+  margin: auto;
+  padding: 35px 5%;
+}
+.admin-title-row {
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+.admin-title-row h1 {
+  gap: 10px;
+  margin: 0;
+  font-size: 25px;
+}
+.admin-title-row p {
+  color: #85899a;
+  margin: 8px 0 0;
+}
+.admin-refresh {
+  background: #5145cd;
+  color: white;
+  border: none;
+}
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 17px;
+  margin-bottom: 28px;
+}
+.admin-stat-card {
+  background: white;
+  border: 1px solid #ebebf1;
+  padding: 22px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.admin-stat-icon {
+  background: #efedff;
+  color: #5145cd;
+  padding: 13px;
+  border-radius: 11px;
+}
+.admin-stat-card p {
+  color: #777d8c;
+  font-size: 12px;
+}
+.admin-stat-card h2 {
+  margin: 7px 0 0;
+  font-size: 25px;
+}
+.admin-table-section {
+  background: white;
+  border: 1px solid #ebebf1;
+  border-radius: 14px;
+  padding: 24px;
+}
+.admin-table-heading {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.admin-table-heading h2 { margin: 0; font-size: 19px; }
+.admin-table-heading > span {
+  color: #5145cd;
+  background: #efedff;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.admin-table-wrapper { overflow-x: auto; }
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 950px;
+  text-align: left;
+}
+.admin-table th {
+  background: #f8f8fb;
+  color: #777d8c;
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 14px 12px;
+}
+.admin-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #eeeef3;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.admin-table td small {
+  display: block;
+  color: #85899a;
+  margin-top: 5px;
+}
+.admin-ticket {
+  color: #5145cd;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  max-width: 150px;
+}
+.admin-description {
+  max-width: 220px;
+  line-height: 1.5;
+}
+.admin-status, .admin-priority {
+  display: inline-block;
+  padding: 6px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-status.pending, .admin-priority.medium {
+  background: #fff4dc;
+  color: #a36a00;
+}
+.admin-status.in-progress {
+  background: #e8f1ff;
+  color: #2563a6;
+}
+.admin-status.resolved, .admin-priority.low {
+  background: #e3f8ed;
+  color: #18834c;
+}
+.admin-priority.high {
+  background: #ffe7e7;
+  color: #c03939;
+}
+.admin-status-select {
+  padding: 8px;
+  border: 1px solid #dedee8;
+  border-radius: 7px;
+  background: white;
+  font-size: 11px;
+  cursor: pointer;
+}
+.admin-message {
+  text-align: center;
+  padding: 35px;
+  color: #85899a;
+}
+.admin-error {
+  color: #c03939;
+  padding: 12px;
+  background: #fff0f0;
+  border-radius: 8px;
+}
+@media (max-width: 850px) {
+  .admin-stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-header { padding: 15px 4%; }
+  .admin-main { padding: 25px 4%; }
+}
+@media (max-width: 500px) {
+  .admin-stats { grid-template-columns: 1fr 1fr; }
+  .admin-role { display: none; }
+  .admin-title-row h1 { font-size: 19px; }
+}

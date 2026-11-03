@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 
@@ -7,18 +6,23 @@ const {
   analyzeComplaintController,
   trackComplaint,
   getMyComplaints,
+  getAllComplaints,
+  updateComplaintStatus,
+  getStudentNotifications,
+  markNotificationRead,
 } = require("../controllers/complaintController");
 
-// Get all complaints submitted by a student
+// Student routes
 router.get("/my", getMyComplaints);
+router.get("/notifications", getStudentNotifications);
+router.patch("/notifications/:id/read", markNotificationRead);
 
-// Track a specific complaint
 router.get("/track/:ticketId", trackComplaint);
-
-// Analyze complaint using Gemini AI
 router.post("/analyze", analyzeComplaintController);
-
-// Submit complaint
 router.post("/", createComplaint);
+
+// Admin routes
+router.get("/", getAllComplaints);
+router.patch("/:ticketId/status", updateComplaintStatus);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import AdminDashboard from "./AdminDashboard";
 
 import {
   Mic,
@@ -15,10 +16,13 @@ import {
   AlertCircle,
   Menu,
   RefreshCw,
+  Check,
 } from "lucide-react";
 
 import "./App.css";
 import ComplaintForm from "./ComplaintForm";
+
+const API_URL = "http://localhost:5000/api/complaints";
 
 function App() {
   const [activeTab, setActiveTab] = useState("Dashboard");
@@ -26,21 +30,31 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [notifications, setNotifications] = useState([]);
+  const [notificationError, setNotificationError] = useState("");
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [markingReadId, setMarkingReadId] = useState(null);
+
   // Demo student profile
   const studentId = "STU001";
 
   // Fetch complaints from backend
-  const fetchComplaints = async () => {
+  const fetchComplaints = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
       const response = await axios.get(
-        `http://localhost:5000/api/complaints/my?student_id=${studentId}`
+        `${API_URL}/my?student_id=${studentId}`
       );
 
       if (response.data.success) {
-        setComplaints(response.data.data);
+        const records =
+          response.data.data ?? response.data.complaints ?? [];
+
+        setComplaints(records);
+      } else {
+        setError("Unable to load complaints. Please try again.");
       }
     } catch (err) {
       console.error("Fetching complaints error:", err);
@@ -48,16 +62,85 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Load complaints on dashboard and My Complaints page
+  // Fetch notifications from backend
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setNotificationError("");
+      setNotificationsLoading(true);
+
+      const response = await axios.get(
+        `${API_URL}/notifications?student_id=${studentId}`
+      );
+
+      if (response.data.success) {
+        setNotifications(response.data.notifications || []);
+      } else {
+        setNotificationError("Unable to load notifications.");
+      }
+    } catch (err) {
+      console.error("Notification fetch error:", err);
+      setNotificationError("Unable to load notifications.");
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  // Load complaints when Dashboard or My Complaints opens
   useEffect(() => {
     if (activeTab === "Dashboard" || activeTab === "My Complaints") {
       fetchComplaints();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchComplaints]);
 
-  // Real statistics
+  // Fetch notifications on startup and every 10 seconds
+  // This keeps the bell badge updated across all pages
+  useEffect(() => {
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Calculate unread notifications
+  const unreadCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
+
+  // Mark notification as read
+  const markNotificationRead = async (notificationId) => {
+    try {
+      setMarkingReadId(notificationId);
+
+      const response = await axios.patch(
+        `${API_URL}/notifications/${notificationId}/read`
+      );
+
+      if (response.data.success) {
+        // Update locally immediately so badge count decreases
+        setNotifications((previous) =>
+          previous.map((notification) =>
+            notification.id === notificationId
+              ? { ...notification, is_read: 1 }
+              : notification
+          )
+        );
+      } else {
+        setNotificationError("Unable to update notification.");
+      }
+    } catch (err) {
+      console.error("Mark notification read error:", err);
+      setNotificationError("Unable to update notification.");
+    } finally {
+      setMarkingReadId(null);
+    }
+  };
+
+  // Real complaint statistics
   const stats = [
     {
       label: "Total Complaints",
@@ -84,14 +167,19 @@ function App() {
   const formatDate = (date) => {
     if (!date) return "Date unavailable";
 
-    return new Date(date.replace(" ", "T") + "Z").toLocaleDateString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }
+    const parsedDate = new Date(
+      date.includes("T") ? date : date.replace(" ", "T") + "Z"
     );
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "Date unavailable";
+    }
+
+    return parsedDate.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   const getStatusClass = (status) => {
@@ -136,6 +224,11 @@ function App() {
     </div>
   );
 
+  // Show Admin Dashboard on /admin
+  if (window.location.pathname === "/admin") {
+    return <AdminDashboard />;
+  }
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -155,17 +248,22 @@ function App() {
         {[
           { name: "Dashboard", icon: LayoutDashboard },
           { name: "My Complaints", icon: ClipboardList },
+          { name: "Notifications", icon: Bell },
           { name: "Settings", icon: Settings },
         ].map(({ name, icon: Icon }) => (
           <button
             key={name}
-            className={`nav-item ${
-              activeTab === name ? "active" : ""
-            }`}
+            className={`nav-item ${activeTab === name ? "active" : ""}`}
             onClick={() => setActiveTab(name)}
           >
             <Icon size={19} />
             {name}
+
+            {name === "Notifications" && unreadCount > 0 && (
+              <span className="nav-notification-count">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
         ))}
 
@@ -181,7 +279,7 @@ function App() {
 
       <main className="main-content">
         <header className="topbar">
-          <button className="mobile-menu">
+          <button className="mobile-menu" aria-label="Menu">
             <Menu />
           </button>
 
@@ -191,12 +289,24 @@ function App() {
           </div>
 
           <div className="top-actions">
-            <button className="icon-button">
+            <button className="icon-button" aria-label="Search">
               <Search />
             </button>
 
-            <button className="icon-button">
+            {/* Notification Bell with unread count */}
+            <button
+              className="icon-button notification-bell"
+              aria-label={`${unreadCount} unread notifications`}
+              title={`${unreadCount} unread notifications`}
+              onClick={() => setActiveTab("Notifications")}
+            >
               <Bell />
+
+              {unreadCount > 0 && (
+                <span className="notification-count">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
 
             <div className="profile-avatar">DS</div>
@@ -206,8 +316,163 @@ function App() {
         {/* New Complaint Page */}
         {activeTab === "New Complaint" ? (
           <ComplaintForm
-            onBack={() => setActiveTab("Dashboard")}
+            onBack={() => {
+              setActiveTab("Dashboard");
+              fetchComplaints();
+            }}
           />
+
+        ) : activeTab === "Notifications" ? (
+
+          /* Separate Notifications Page */
+          <section className="notifications-page">
+
+            <div className="notifications-page-header">
+              <div>
+                <span className="eyebrow">STUDENT UPDATES</span>
+                <h2>Notifications</h2>
+                <p>
+                  Stay updated about your complaints and their progress.
+                </p>
+              </div>
+
+              <button
+                className="refresh-notifications"
+                onClick={fetchNotifications}
+                disabled={notificationsLoading}
+              >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
+            </div>
+
+            {/* Notification Summary */}
+            <div className="notification-summary">
+
+              <div className="notification-summary-card">
+                <span>Total Notifications</span>
+                <h2>{notifications.length}</h2>
+              </div>
+
+              <div className="notification-summary-card">
+                <span>Unread</span>
+                <h2>{unreadCount}</h2>
+              </div>
+
+              <div className="notification-summary-card">
+                <span>Read</span>
+                <h2>{notifications.length - unreadCount}</h2>
+              </div>
+
+            </div>
+
+            {notificationError && (
+              <div className="notification-error">
+                {notificationError}
+              </div>
+            )}
+
+            {/* Loading State */}
+            {notificationsLoading && notifications.length === 0 ? (
+              <div className="notifications-empty">
+                <RefreshCw size={32} />
+                <h3>Loading notifications...</h3>
+              </div>
+
+            ) : notifications.length === 0 ? (
+
+              /* Empty State */
+              <div className="notifications-empty">
+                <Bell size={38} />
+                <h3>You're all caught up!</h3>
+                <p>
+                  You will receive updates here when your complaint
+                  status changes.
+                </p>
+              </div>
+
+            ) : (
+
+              /* Notification List */
+              <div className="notifications-page-list">
+
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`notification-card ${
+                      notification.is_read ? "read" : "unread"
+                    }`}
+                  >
+
+                    <div className="notification-card-icon">
+                      {notification.is_read ? (
+                        <CheckCircle2 size={21} />
+                      ) : (
+                        <Bell size={21} />
+                      )}
+                    </div>
+
+                    <div className="notification-card-content">
+
+                      <div className="notification-card-heading">
+                        <h3>Complaint Update</h3>
+
+                        <span
+                          className={`notification-status ${
+                            notification.is_read ? "read" : "unread"
+                          }`}
+                        >
+                          {notification.is_read ? "READ" : "UNREAD"}
+                        </span>
+                      </div>
+
+                      <p>{notification.message}</p>
+
+                      <div className="notification-card-meta">
+                        <span>
+                          Ticket: {notification.ticket_id}
+                        </span>
+
+                        <span>
+                          {formatDate(notification.created_at)}
+                        </span>
+                      </div>
+
+                    </div>
+
+                    {!notification.is_read ? (
+
+                      <button
+                        className="mark-read-button"
+                        disabled={markingReadId === notification.id}
+                        onClick={() =>
+                          markNotificationRead(notification.id)
+                        }
+                      >
+                        <Check size={16} />
+
+                        {markingReadId === notification.id
+                          ? "Updating..."
+                          : "Mark as read"}
+                      </button>
+
+                    ) : (
+
+                      <span className="read-indicator">
+                        <CheckCircle2 size={16} />
+                        Read
+                      </span>
+
+                    )}
+
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </section>
+
         ) : activeTab === "My Complaints" ? (
 
           /* My Complaints Page */
@@ -219,10 +484,7 @@ function App() {
                 <p>Track all your submitted complaints.</p>
               </div>
 
-              <button
-                onClick={fetchComplaints}
-                disabled={loading}
-              >
+              <button onClick={fetchComplaints} disabled={loading}>
                 <RefreshCw size={16} />
                 Refresh
               </button>
@@ -322,9 +584,7 @@ function App() {
                   <h2>Recent complaints</h2>
                 </div>
 
-                <button
-                  onClick={() => setActiveTab("My Complaints")}
-                >
+                <button onClick={() => setActiveTab("My Complaints")}>
                   View all <ArrowUpRight size={16} />
                 </button>
               </div>
@@ -359,10 +619,13 @@ function App() {
           </>
 
         ) : (
+
+          /* Settings Page */
           <section className="recent-section">
             <h2>Settings</h2>
             <p>Settings will be available soon.</p>
           </section>
+
         )}
       </main>
     </div>
