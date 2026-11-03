@@ -12,7 +12,7 @@
   overflow: hidden;
 }
 
-/* Gradient accent along the top edge */
+
 .complaint-page::before {
   content: "";
   position: absolute;
