@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import AdminDashboard from "./AdminDashboard";
@@ -10,7 +9,6 @@ import {
   ClipboardList,
   Settings,
   Bell,
-  Search,
   ArrowUpRight,
   Clock,
   CheckCircle2,
@@ -350,10 +348,7 @@ function App() {
           </button>
         ))}
 
-        <button
-          className="nav-item"
-          onClick={backToPortal}
-        >
+        <button className="nav-item" onClick={backToPortal}>
           <ArrowUpRight size={19} />
           Switch Portal
         </button>
@@ -380,10 +375,6 @@ function App() {
           </div>
 
           <div className="top-actions">
-            <button className="icon-button" aria-label="Search">
-              <Search />
-            </button>
-
             <button
               className="icon-button notification-bell"
               aria-label={`${unreadCount} unread notifications`}
@@ -541,9 +532,8 @@ function App() {
           <section className="recent-section">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">YOUR ACTIVITY</span>
+                <span className="eyebrow">YOUR REPORTS</span>
                 <h2>My Complaints</h2>
-                <p>Track all your submitted complaints.</p>
               </div>
 
               <button onClick={fetchComplaints} disabled={loading}>
@@ -552,14 +542,12 @@ function App() {
               </button>
             </div>
 
-            {error && (
+            {error ? (
               <div className="empty-state">
                 <AlertCircle size={30} />
                 <p>{error}</p>
               </div>
-            )}
-
-            {loading ? (
+            ) : loading ? (
               <div className="empty-state">
                 <RefreshCw size={30} />
                 <p>Loading your complaints...</p>
@@ -567,8 +555,17 @@ function App() {
             ) : complaints.length === 0 ? (
               <div className="empty-state">
                 <ClipboardList size={35} />
-                <h3>No complaints found</h3>
+                <h3>No complaints yet</h3>
                 <p>Your submitted complaints will appear here.</p>
+
+                <button
+                  className="report-button"
+                  onClick={() => setActiveTab("New Complaint")}
+                >
+                  <Mic size={19} />
+                  Report an Issue
+                  <ArrowUpRight size={18} />
+                </button>
               </div>
             ) : (
               <div className="complaints-list">
@@ -634,46 +631,6 @@ function App() {
               <div className="report-illustration">
                 <Mic size={54} />
               </div>
-            </section>
-
-            <section className="recent-section">
-              <div className="section-heading">
-                <div>
-                  <span className="eyebrow">ACTIVITY</span>
-                  <h2>Recent complaints</h2>
-                </div>
-
-                <button onClick={() => setActiveTab("My Complaints")}>
-                  View all <ArrowUpRight size={16} />
-                </button>
-              </div>
-
-              {error ? (
-                <div className="empty-state">
-                  <AlertCircle size={30} />
-                  <p>{error}</p>
-                </div>
-              ) : loading ? (
-                <div className="empty-state">
-                  <RefreshCw size={30} />
-                  <p>Loading recent complaints...</p>
-                </div>
-              ) : complaints.length === 0 ? (
-                <div className="empty-state">
-                  <ClipboardList size={35} />
-                  <h3>No complaints displayed yet</h3>
-                  <p>Your submitted complaints will appear here.</p>
-                </div>
-              ) : (
-                <div className="complaints-list">
-                  {complaints.slice(0, 3).map((complaint) => (
-                    <ComplaintCard
-                      key={complaint.ticket_id}
-                      complaint={complaint}
-                    />
-                  ))}
-                </div>
-              )}
             </section>
           </>
         ) : (
