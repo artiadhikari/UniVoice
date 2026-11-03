@@ -1,122 +1,130 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import {
+  Mic,
+  LayoutDashboard,
+  ClipboardList,
+  Settings,
+  Bell,
+  Search,
+  ArrowUpRight,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Menu,
+} from "lucide-react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeTab, setActiveTab] = useState("Dashboard");
+
+  const stats = [
+    { label: "Total Complaints", value: "128", icon: ClipboardList },
+    { label: "Pending", value: "24", icon: Clock },
+    { label: "In Progress", value: "18", icon: AlertCircle },
+    { label: "Resolved", value: "86", icon: CheckCircle2 },
+  ];
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-icon"><Mic size={24} /></div>
+          <div>
+            <h2>UniVoice</h2>
+            <span>PARUL UNIVERSITY</span>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        <p className="nav-heading">MENU</p>
+        {[
+          { name: "Dashboard", icon: LayoutDashboard },
+          { name: "My Complaints", icon: ClipboardList },
+          { name: "Settings", icon: Settings },
+        ].map(({ name, icon: Icon }) => (
+          <button
+            key={name}
+            className={`nav-item ${activeTab === name ? "active" : ""}`}
+            onClick={() => setActiveTab(name)}
+          >
+            <Icon size={19} />
+            {name}
+          </button>
+        ))}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="sidebar-bottom">
+          <div className="profile-avatar">DS</div>
+          <div>
+            <strong>Demo Student</strong>
+            <span>Student Account</span>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </aside>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <main className="main-content">
+        <header className="topbar">
+          <button className="mobile-menu"><Menu /></button>
+          <div>
+            <p>PARUL UNIVERSITY / STUDENT PORTAL</p>
+            <h3>{activeTab}</h3>
+          </div>
+          <div className="top-actions">
+            <button className="icon-button"><Search /></button>
+            <button className="icon-button"><Bell /></button>
+            <div className="profile-avatar">DS</div>
+          </div>
+        </header>
+
+        <section className="welcome">
+          <div>
+            <p className="eyebrow">STUDENT SUPPORT CENTER</p>
+            <h1>Your voice matters.</h1>
+            <p>Report an issue, track its progress, and make campus life better.</p>
+          </div>
+          <div className="welcome-decoration"><Mic size={70} /></div>
+        </section>
+
+        <section className="stats-grid">
+          {stats.map(({ label, value, icon: Icon }) => (
+            <div className="stat-card" key={label}>
+              <div className="stat-top">
+                <span>{label}</span>
+                <Icon size={20} />
+              </div>
+              <h2>{value}</h2>
+            </div>
+          ))}
+        </section>
+
+        <section className="report-section">
+          <div>
+            <span className="eyebrow">QUICK ACTION</span>
+            <h2>Have something to report?</h2>
+            <p>Speak naturally in Hindi or English. We'll help turn your concern into a complaint.</p>
+            <button className="report-button" onClick={() => setActiveTab("New Complaint")}>
+              <Mic size={19} /> Report an Issue <ArrowUpRight size={18} />
+            </button>
+          </div>
+          <div className="report-illustration"><Mic size={54} /></div>
+        </section>
+
+        <section className="recent-section">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">ACTIVITY</span>
+              <h2>Recent complaints</h2>
+            </div>
+            <button onClick={() => setActiveTab("My Complaints")}>View all <ArrowUpRight size={16} /></button>
+          </div>
+
+          <div className="empty-state">
+            <ClipboardList size={35} />
+            <h3>No complaints displayed yet</h3>
+            <p>Your submitted complaints will appear here.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
