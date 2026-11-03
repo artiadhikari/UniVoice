@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import "./App.css";
 
+import ComplaintForm from "./ComplaintForm";
+
 function App() {
   const [activeTab, setActiveTab] = useState("Dashboard");
 
@@ -73,7 +75,10 @@ function App() {
             <div className="profile-avatar">DS</div>
           </div>
         </header>
-
+{activeTab === "New Complaint" ? (
+  <ComplaintForm onBack={() => setActiveTab("Dashboard")} />
+) : (
+  <>
         <section className="welcome">
           <div>
             <p className="eyebrow">STUDENT SUPPORT CENTER</p>
@@ -122,6 +127,8 @@ function App() {
             <p>Your submitted complaints will appear here.</p>
           </div>
         </section>
+          </>
+)}
       </main>
     </div>
   );
