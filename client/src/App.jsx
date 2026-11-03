@@ -282,31 +282,10 @@ function App() {
     return <PortalSelect onSelect={selectPortal} />;
   }
 
-  // Show admin dashboard
+  
+    
   if (selectedPortal === "admin") {
-    return (
-      <>
-        <button
-          onClick={backToPortal}
-          style={{
-            position: "fixed",
-            top: "15px",
-            left: "15px",
-            zIndex: 9999,
-            padding: "10px 16px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            background: "white",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
-        >
-          ← Back to Portal
-        </button>
-
-        <AdminDashboard />
-      </>
-    );
+    return <AdminDashboard onBack={backToPortal} />;
   }
 
   // Student portal

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -14,7 +13,7 @@ import "./AdminDashboard.css";
 
 const API = "http://localhost:5000/api/complaints";
 
-function AdminDashboard() {
+function AdminDashboard({ onBack }) {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState("");
@@ -86,9 +85,9 @@ function AdminDashboard() {
           <span className="admin-role">Administrator</span>
           <button
             className="admin-back"
-            onClick={() => (window.location.href = "/")}
+            onClick={() => (onBack ? onBack() : (window.location.href = "/"))}
           >
-            <ArrowLeft size={16} /> Student Portal
+            <ArrowLeft size={16} /> Back to Portal
           </button>
         </div>
       </header>

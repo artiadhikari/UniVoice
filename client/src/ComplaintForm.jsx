@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import axios from "axios";
 import { Mic, MicOff, ArrowLeft, Send, Languages } from "lucide-react";
@@ -196,6 +195,16 @@ function ComplaintForm({ onBack }) {
     }
   };
 
+  // Leave the form and return to the student dashboard
+  const handleBackToDashboard = () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+    setDescription("");
+    setAnalysis(null);
+    setError("");
+    onBack();
+  };
+
   // Success screen
   if (submittedTicket) {
     return (
@@ -232,163 +241,171 @@ function ComplaintForm({ onBack }) {
 
   return (
     <div className="complaint-page">
-      <button className="back-button" onClick={onBack}>
-        <ArrowLeft size={18} /> Back to Dashboard
+      <button className="back-button" onClick={handleBackToDashboard}>
+        <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      <div className="complaint-heading">
-        <span className="eyebrow">STUDENT SUPPORT</span>
-        <h1>Raise your voice.</h1>
-        <p>Tell us what's wrong. We're here to listen and help.</p>
-      </div>
-
-      <div className="voice-header">
-        <div>
-          <h2>
-            {needsFollowUp ? "Let's get a few more details" : "Describe your issue"}
-          </h2>
-          <p>
-            {needsFollowUp
-              ? "UniVoice has a follow-up question for you."
-              : "Speak naturally. UniVoice will understand your complaint."}
-          </p>
-        </div>
-        <Languages size={23} />
-      </div>
-
-      <label className="field-label">Choose your language</label>
-      <select
-        className="complaint-input"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-        disabled={!!analysis}
-      >
-        <option value="en-IN">English</option>
-        <option value="hi-IN">हिन्दी (Hindi)</option>
-        <option value="gu-IN">ગુજરાતી (Gujarati)</option>
-      </select>
-
-      {analysis && needsFollowUp && (
-        <div className="ai-preview">
-          <h2>🤖 UniVoice wants to know</h2>
-          <p>
-            {analysis.follow_up_question ||
-              "Please provide the remaining essential complaint details."}
-          </p>
-          <p className="ai-reason">
-            Still needed: {missingFields.join(", ").replaceAll("_", " ")}
-          </p>
-        </div>
-      )}
-
-      <div className="voice-box">
-        <button
-          className={`mic-button ${listening ? "recording" : ""}`}
-          onClick={startListening}
-          disabled={listening || analyzing}
-        >
-          {listening ? <MicOff size={28} /> : <Mic size={28} />}
-        </button>
-
-        <h3>{listening ? "Listening..." : "Tap to speak"}</h3>
-
-        <p>
-          {listening
-            ? "Speak clearly. We're listening."
-            : needsFollowUp
-              ? "Answer UniVoice's question using your voice."
-              : "Your voice will be converted into text."}
-        </p>
-      </div>
-
-      {error && <p className="voice-error">{error}</p>}
-
-      {analyzing && (
-        <div className="ai-loading">
-          <span>✨</span>
-          <p>UniVoice AI is processing your response...</p>
-        </div>
-      )}
-
-      <label className="field-label">
-        {needsFollowUp ? "Your answer" : "Your spoken complaint"}
-      </label>
-
-      <textarea
-        className="complaint-textarea"
-        placeholder={
-          needsFollowUp
-            ? "Your spoken answer will appear here..."
-            : "Your spoken complaint will appear here..."
-        }
-        value={description}
-        readOnly
-        rows={4}
-      />
-
-      <p className="character-count">{description.length} characters</p>
-
-      {!analysis ? (
-        <button
-          className="submit-complaint"
-          disabled={!description.trim() || analyzing}
-          onClick={handleAnalyze}
-        >
-          {analyzing ? "Analyzing..." : "✨ Analyze My Complaint"}
-        </button>
-      ) : needsFollowUp ? (
-        <button
-          className="submit-complaint"
-          disabled={!description.trim() || analyzing}
-          onClick={handleFollowUp}
-        >
-          {analyzing ? "Processing..." : "Send Answer"} <Send size={17} />
-        </button>
-      ) : (
-        <div className="ai-preview">
-          <h2>✨ Final Complaint Review</h2>
-          <p>Please review your details before submission.</p>
-
-          <div className="ai-detail">
-            <strong>Category</strong>
-            <span>{analysis.category}</span>
+      <div className="complaint-layout">
+        {/* Left column: heading, language, follow-up question */}
+        <div className="complaint-left">
+          <div className="complaint-heading">
+            <span className="eyebrow">STUDENT SUPPORT</span>
+            <h1>Raise your voice.</h1>
+            <p>Tell us what's wrong. We're here to listen and help.</p>
           </div>
 
-          <div className="ai-detail">
-            <strong>Hostel</strong>
-            <span>{analysis.hostel}</span>
+          <div className="voice-header">
+            <div>
+              <h2>
+                {needsFollowUp ? "Let's get a few more details" : "Describe your issue"}
+              </h2>
+              <p>
+                {needsFollowUp
+                  ? "UniVoice has a follow-up question for you."
+                  : "Speak naturally. UniVoice will understand your complaint."}
+              </p>
+            </div>
+            <Languages size={23} />
           </div>
 
-          <div className="ai-detail">
-            <strong>Room Number</strong>
-            <span>{analysis.room_number || "Not provided"}</span>
-          </div>
-
-          <div className="ai-detail">
-            <strong>Location</strong>
-            <span>{analysis.location_details || "Not provided"}</span>
-          </div>
-
-          <div className="ai-detail">
-            <strong>Priority</strong>
-            <span>{analysis.priority}</span>
-          </div>
-
-          <div className="ai-detail">
-            <strong>Complaint</strong>
-            <p>{analysis.description}</p>
-          </div>
-
-          <p className="ai-reason">{analysis.urgency_reason}</p>
-
-          <button
-            className="submit-complaint"
-            onClick={handleSubmit}
+          <label className="field-label">Choose your language</label>
+          <select
+            className="complaint-input"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            disabled={!!analysis}
           >
-            Confirm & Submit <Send size={17} />
-          </button>
+            <option value="en-IN">English</option>
+            <option value="hi-IN">हिन्दी (Hindi)</option>
+            <option value="gu-IN">ગુજરાતી (Gujarati)</option>
+          </select>
+
+          {analysis && needsFollowUp && (
+            <div className="ai-preview">
+              <h2>🤖 UniVoice wants to know</h2>
+              <p>
+                {analysis.follow_up_question ||
+                  "Please provide the remaining essential complaint details."}
+              </p>
+              <p className="ai-reason">
+                Still needed: {missingFields.join(", ").replaceAll("_", " ")}
+              </p>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right column: voice input, answer, actions */}
+        <div className="complaint-right">
+          <div className="voice-box">
+            <button
+              className={`mic-button ${listening ? "recording" : ""}`}
+              onClick={startListening}
+              disabled={listening || analyzing}
+            >
+              {listening ? <MicOff size={28} /> : <Mic size={28} />}
+            </button>
+
+            <h3>{listening ? "Listening..." : "Tap to speak"}</h3>
+
+            <p>
+              {listening
+                ? "Speak clearly. We're listening."
+                : needsFollowUp
+                  ? "Answer UniVoice's question using your voice."
+                  : "Your voice will be converted into text."}
+            </p>
+          </div>
+
+          {error && <p className="voice-error">{error}</p>}
+
+          {analyzing && (
+            <div className="ai-loading">
+              <span>✨</span>
+              <p>UniVoice AI is processing your response...</p>
+            </div>
+          )}
+
+          <label className="field-label">
+            {needsFollowUp ? "Your answer" : "Your spoken complaint"}
+          </label>
+
+          <textarea
+            className="complaint-textarea"
+            placeholder={
+              needsFollowUp
+                ? "Your spoken answer will appear here..."
+                : "Your spoken complaint will appear here..."
+            }
+            value={description}
+            readOnly
+            rows={4}
+          />
+
+          <p className="character-count">{description.length} characters</p>
+
+          {!analysis ? (
+            <button
+              className="submit-complaint"
+              disabled={!description.trim() || analyzing}
+              onClick={handleAnalyze}
+            >
+              {analyzing ? "Analyzing..." : "✨ Analyze My Complaint"}
+            </button>
+          ) : needsFollowUp ? (
+            <button
+              className="submit-complaint"
+              disabled={!description.trim() || analyzing}
+              onClick={handleFollowUp}
+            >
+              {analyzing ? "Processing..." : "Send Answer"} <Send size={17} />
+            </button>
+          ) : (
+            <div className="ai-preview">
+              <h2>✨ Final Complaint Review</h2>
+              <p>Please review your details before submission.</p>
+
+              <div className="ai-detail">
+                <strong>Category</strong>
+                <span>{analysis.category}</span>
+              </div>
+
+              <div className="ai-detail">
+                <strong>Hostel</strong>
+                <span>{analysis.hostel}</span>
+              </div>
+
+              <div className="ai-detail">
+                <strong>Room Number</strong>
+                <span>{analysis.room_number || "Not provided"}</span>
+              </div>
+
+              <div className="ai-detail">
+                <strong>Location</strong>
+                <span>{analysis.location_details || "Not provided"}</span>
+              </div>
+
+              <div className="ai-detail">
+                <strong>Priority</strong>
+                <span>{analysis.priority}</span>
+              </div>
+
+              <div className="ai-detail">
+                <strong>Complaint</strong>
+                <p>{analysis.description}</p>
+              </div>
+
+              <p className="ai-reason">{analysis.urgency_reason}</p>
+
+              <button
+                className="submit-complaint"
+                onClick={handleSubmit}
+              >
+                Confirm & Submit <Send size={17} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
